@@ -1,0 +1,51 @@
+<html>
+	<body>
+		<script src="../objectpool.js"></script>
+
+		<script src="./gowiththeflow.js"></script>
+
+		<script>THREE = {};		</script>
+		<script src="./Vector3.js">	</script>
+
+		<script>
+			var stepPool	= function(nObject, callback){
+				var arr	= new Array(nObject);
+				for(var i = 0; i < nObject; i++ )	arr[i]	= vector3Pool.get();
+				setTimeout(function(){
+					for(var i = 0; i < nObject; i++ )	vector3Pool.put(arr[i]);
+					if( callback )	callback();
+				}, 0);
+			}
+			var stepNew	= function(nObject, callback){
+				//console.log("stepNew", nObject);
+				var arr	= new Array(nObject);
+				for(var i = 0; i < nObject; i++ )	arr[i] = new THREE.Vector3();
+				setTimeout(function(){
+					arr	= [];
+					if( callback )	callback();
+				}, 0);
+			}			
+						
+			var vector3Pool	= new ObjectPool(THREE.Vector3, 1000);
+			
+			var loop	= function(nIter, nObject, callback){
+				var flow 	= Flow();
+				flow.seq(function(next){
+					console.time("loopNew");
+					next();
+				})
+				for(var i = 0; i < 500; i++){
+					flow.par(function(next){
+						stepPool(10000, function(){
+							next();
+						});
+					})
+				}
+				flow.seq(function(next){
+					console.timeEnd("loopNew");
+					callback && callback();
+				})				
+			}
+		</script>
+	</body>
+</html>
